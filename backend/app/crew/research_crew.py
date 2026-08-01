@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 import urllib.request
 from app.config import get_settings
 
@@ -69,30 +70,35 @@ RETRYABLE_STATUS_CODES = {429, 500, 502, 503}
 MAX_ATTEMPTS = 6
 
 
-def _backoff(attempt: int, e=None) -> float:
+def _backoff(attempt: int, delay=None, e=None) -> float:
     import time
-    retry_after = None
+    if delay is not None:
+        return delay + 1
     if e is not None:
         try:
             retry_after = e.headers.get("Retry-After")
+            if retry_after is not None:
+                return float(retry_after)
         except Exception:
-            retry_after = None
-    if retry_after is not None:
-        try:
-            return float(retry_after)
-        except (TypeError, ValueError):
             pass
     base = 2 ** attempt
     return base + time.monotonic() % 1
 
 
-def _error_message(e) -> str:
+def _parse_error(e):
+    """Return (message, retry_delay_seconds_or_None) from a Gemini HTTPError."""
     try:
         body = json.loads(e.read().decode("utf-8", errors="replace"))
         msg = body.get("error", {}).get("message", "").strip()
-        return msg or str(e)
     except Exception:
-        return str(e)
+        msg = ""
+    if not msg:
+        msg = str(e)
+    delay = None
+    m = re.search(r"retry in ([\d.]+)", msg, re.IGNORECASE)
+    if m:
+        delay = float(m.group(1))
+    return msg, delay
 
 
 def call_gemini(prompt: str) -> str:
@@ -116,14 +122,14 @@ def call_gemini(prompt: str) -> str:
                     f"Gemini returned no text content: {json.dumps(data)[:500]}"
                 )
         except urllib.error.HTTPError as e:
-            detail = _error_message(e)
+            detail, delay = _parse_error(e)
             if e.code in RETRYABLE_STATUS_CODES and attempt < MAX_ATTEMPTS - 1:
-                time.sleep(_backoff(attempt, e))
+                time.sleep(_backoff(attempt, delay, e))
                 continue
             raise RuntimeError(f"Gemini API error {e.code}: {detail}")
         except (TimeoutError, OSError) as e:
             if attempt < MAX_ATTEMPTS - 1:
-                time.sleep(_backoff(attempt, e))
+                time.sleep(_backoff(attempt, e=e))
                 continue
             raise
 
