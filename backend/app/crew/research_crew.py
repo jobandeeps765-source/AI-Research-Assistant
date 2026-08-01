@@ -9,61 +9,40 @@ settings = get_settings()
 GEMINI_MODEL = settings.GEMINI_MODEL
 API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
-RESEARCH_PROMPT = """You are an expert research strategist and analyst.
-Analyze the following research topic thoroughly.
-Provide comprehensive research findings including:
-- Key facts and definitions
-- Important statistics and data points
-- Expert opinions and viewpoints
-- Real-world examples and case studies
-- Current trends and recent developments
-- Challenges and limitations
-- Future prospects
+RESEARCH_PROMPT = """You are a research assistant who gathers simple, plain-English notes about a topic.
+
+For the topic below, gather short, clear notes:
+- What it is (in simple words)
+- A few key facts and numbers
+- 2-3 real-world examples
+- Main pros and cons or challenges
+- What might happen next
+
+Keep every point short and simple. No jargon. Use bullet points.
 
 Topic: {topic}
+"""
 
-Provide detailed research findings. Be specific with numbers, dates, and examples."""
+WRITER_PROMPT = """You are a friendly writer who explains things simply, like you're talking to a friend.
 
-WRITER_PROMPT = """You are a skilled writer who explains things in a way that anyone can understand.
-Transform the research below into a clear, easy-to-read report.
+Turn the notes below into a SHORT, easy-to-read report.
 
 RULES:
-- Write like you're explaining to a smart friend, not a professor
-- Use simple, everyday language — avoid jargon and technical terms
-- Use short paragraphs and sentences
-- Use real-world analogies and relatable examples
-- Start with a single # title (the topic name)
-- Use ## for main sections, ### for subsections
-- Use bullet points (-) and bold text (**text**) where appropriate
-- Each section must have enough content to be useful (not just one line)
-- Make it feel like a well-written blog post, not a corporate paper
+- Plain, everyday words only. No jargon, no big words, no fancy phrasing.
+- Keep it SHORT: about 300 words (maximum 400 words).
+- Short sentences. Short paragraphs (1-3 sentences).
+- Start with a single # title (the topic name).
+- Use ONLY these sections:
+  ## What's it about
+  ## Key points
+  ## Bottom line
+- Use bullet points (-) and bold (**text**) where useful.
+- Do not add any other sections. Do not repeat the same point twice.
 
-Write EXACTLY these sections in this order:
-
-## Executive Summary
-A quick overview — what this report covers and why it matters, in plain English.
-
-## Introduction
-Set the stage. What is this topic? Why should anyone care? Give context.
-
-## Key Findings
-Use ### subsections for each major point. Share interesting facts, numbers, and examples. Keep it engaging.
-
-## Analysis & Discussion
-What do these findings mean? What are the different perspectives? What's the bigger picture?
-
-## Conclusion
-Wrap it up. What are the main takeaways?
-
-## Recommendations
-Numbered list of practical things people can actually do with this information.
-
----
-
-Research:
+Notes:
 {findings}
 
-Write the full report now. Make it clear, engaging, and at least 1500 words. Write like a human, not a textbook."""
+Write the short, simple report now."""
 
 
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503}

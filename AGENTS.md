@@ -16,19 +16,17 @@ The project uses a **custom 2-step Gemini pipeline** (not the formal CrewAI `Age
 
 | Property | Value |
 |----------|-------|
-| **Role** | Research Strategist |
-| **Prompt** | `RESEARCH_PROMPT` in `backend/app/crew/research_crew.py:11` |
-| **Goal** | Analyze the topic and produce comprehensive research findings |
-| **Output** | Raw research text (facts, stats, examples, trends) |
+| **Role** | Research Assistant |
+| **Prompt** | `RESEARCH_PROMPT` in `backend/app/crew/research_crew.py:12` |
+| **Goal** | Gather short, plain-English notes about the topic |
+| **Output** | Short bullet-point notes (simple words, no jargon) |
 
 **Prompt includes:**
-- Key facts and definitions
-- Important statistics and data points
-- Expert opinions and viewpoints
-- Real-world examples and case studies
-- Current trends and recent developments
-- Challenges and limitations
-- Future prospects
+- What it is (in simple words)
+- A few key facts and numbers
+- 2-3 real-world examples
+- Main pros and cons or challenges
+- What might happen next
 
 ---
 
@@ -36,24 +34,22 @@ The project uses a **custom 2-step Gemini pipeline** (not the formal CrewAI `Age
 
 | Property | Value |
 |----------|-------|
-| **Role** | Technical Writer |
-| **Prompt** | `WRITER_PROMPT` in `backend/app/crew/research_crew.py:26` |
-| **Goal** | Transform research findings into a clear, engaging Markdown report |
-| **Output** | Professional Markdown report (1500+ words) |
+| **Role** | Friendly Writer |
+| **Prompt** | `WRITER_PROMPT` in `backend/app/crew/research_crew.py:27` |
+| **Goal** | Turn notes into a short, easy-to-read report |
+| **Output** | Short Markdown report (~300 words, max 400) |
 
 **Report structure:**
-1. **Executive Summary** — Quick overview in plain English
-2. **Introduction** — Context and why the topic matters
-3. **Key Findings** — Detailed analysis with `###` subsections
-4. **Analysis & Discussion** — Bigger picture and different perspectives
-5. **Conclusion** — Main takeaways
-6. **Recommendations** — Practical numbered suggestions
+1. **What's it about** — plain-language overview
+2. **Key points** — short bullet-point highlights
+3. **Bottom line** — main takeaway in one or two sentences
 
 **Writing rules:**
-- Simple, everyday language (no jargon)
-- Short paragraphs and sentences
-- Real-world analogies and relatable examples
-- Blog-post style, not academic
+- Plain, everyday words only — no jargon or fancy phrasing
+- ~300 words, maximum 400
+- Short sentences and short paragraphs (1-3 sentences)
+- Bullet points and bold text where useful
+- No extra sections, no repetition
 
 ---
 
