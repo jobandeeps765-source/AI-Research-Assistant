@@ -628,7 +628,7 @@ Frontend runs at **http://localhost:5173**
 | `JWT_ALGORITHM` | ❌ | `HS256` | JWT signing algorithm |
 | `JWT_EXPIRATION_MINUTES` | ❌ | `60` | Token expiry in minutes |
 | `GEMINI_API_KEY` | ✅ | — | Google Gemini API key |
-| `GEMINI_MODEL` | ❌ | `gemini-3.6-flash` | Gemini model ID used by the research pipeline |
+| `GEMINI_MODEL` | ❌ | `gemini-3.1-flash-lite` | Gemini model ID used by the research pipeline |
 | `CORS_ORIGINS` | ❌ | `["http://localhost:5173"]` | Allowed CORS origins |
 
 ### Frontend (`frontend/.env`)

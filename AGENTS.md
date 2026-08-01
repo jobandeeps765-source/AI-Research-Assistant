@@ -6,7 +6,7 @@ This file describes the AI agents and pipeline used in this project.
 
 ## AI Pipeline Architecture
 
-The project uses a **custom 2-step Gemini pipeline** (not the formal CrewAI `Agent`/`Task`/`Crew` classes). The backend calls Google Gemini (`gemini-3.6-flash` by default) directly via its REST API, with two sequential prompts.
+The project uses a **custom 2-step Gemini pipeline** (not the formal CrewAI `Agent`/`Task`/`Crew` classes). The backend calls Google Gemini (`gemini-3.1-flash-lite` by default) directly via its REST API, with two sequential prompts.
 
 > **Note:** `backend/app/agents/research_agents.py` and `backend/app/tasks/research_tasks.py` define unused CrewAI Agent/Task classes from an earlier design. The live code in `backend/app/crew/research_crew.py` bypasses them entirely.
 
@@ -64,7 +64,7 @@ The project uses a **custom 2-step Gemini pipeline** (not the formal CrewAI `Age
 | **File** | `backend/app/crew/research_crew.py` |
 | **Entry Point** | `run_research_crew(topic)` |
 | **LLM** | Google Gemini (`temperature: 0.7`) |
-| **API** | Direct REST: `POST /v1beta/models/gemini-3.6-flash:generateContent` |
+| **API** | Direct REST: `POST /v1beta/models/gemini-3.1-flash-lite:generateContent` |
 | **Execution** | `asyncio.to_thread()` — non-blocking for FastAPI |
 | **Retry** | 4 attempts with exponential backoff on HTTP 429 |
 
@@ -112,7 +112,7 @@ Uploaded PDFs are processed by PyMuPDF (`fitz`) for text extraction, then the ex
 | Setting | Value |
 |---------|-------|
 | **Provider** | Google Gemini |
-| **Model** | `gemini-3.6-flash` (configurable via `GEMINI_MODEL`) |
+| **Model** | `gemini-3.1-flash-lite` (configurable via `GEMINI_MODEL`) |
 | **Temperature** | 0.7 |
 | **API** | REST (`urllib`) |
 | **Config File** | `backend/app/config.py` (env: `GEMINI_API_KEY`) |
