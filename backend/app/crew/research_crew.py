@@ -5,7 +5,7 @@ from app.config import get_settings
 
 settings = get_settings()
 
-GEMINI_MODEL = "gemini-flash-latest"
+GEMINI_MODEL = settings.GEMINI_MODEL
 API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
 RESEARCH_PROMPT = """You are an expert research strategist and analyst.
@@ -69,10 +69,30 @@ RETRYABLE_STATUS_CODES = {429, 500, 502, 503}
 MAX_ATTEMPTS = 6
 
 
-def _backoff(attempt: int) -> float:
+def _backoff(attempt: int, e=None) -> float:
     import time
+    retry_after = None
+    if e is not None:
+        try:
+            retry_after = e.headers.get("Retry-After")
+        except Exception:
+            retry_after = None
+    if retry_after is not None:
+        try:
+            return float(retry_after)
+        except (TypeError, ValueError):
+            pass
     base = 2 ** attempt
     return base + time.monotonic() % 1
+
+
+def _error_message(e) -> str:
+    try:
+        body = json.loads(e.read().decode("utf-8", errors="replace"))
+        msg = body.get("error", {}).get("message", "").strip()
+        return msg or str(e)
+    except Exception:
+        return str(e)
 
 
 def call_gemini(prompt: str) -> str:
@@ -96,13 +116,14 @@ def call_gemini(prompt: str) -> str:
                     f"Gemini returned no text content: {json.dumps(data)[:500]}"
                 )
         except urllib.error.HTTPError as e:
+            detail = _error_message(e)
             if e.code in RETRYABLE_STATUS_CODES and attempt < MAX_ATTEMPTS - 1:
-                time.sleep(_backoff(attempt))
+                time.sleep(_backoff(attempt, e))
                 continue
-            raise
+            raise RuntimeError(f"Gemini API error {e.code}: {detail}")
         except (TimeoutError, OSError) as e:
             if attempt < MAX_ATTEMPTS - 1:
-                time.sleep(_backoff(attempt))
+                time.sleep(_backoff(attempt, e))
                 continue
             raise
 

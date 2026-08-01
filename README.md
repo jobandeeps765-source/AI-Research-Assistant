@@ -72,7 +72,7 @@ Enter any research topic and watch **three AI agents** collaborate to produce a 
 │  python-jose (JWT) · passlib/bcrypt · PyMuPDF           │
 ├─────────────────────────────────────────────────────────┤
 │                     AI LAYER                             │
-│  Google Gemini 1.5 Flash (direct REST API)              │
+│  Google Gemini (direct REST API)                              │
 ├─────────────────────────────────────────────────────────┤
 │                    DATABASE                              │
 │  MongoDB (via Motor async driver)                       │
@@ -543,7 +543,7 @@ erDiagram
 │   • Copy to clipboard / Download as .md / Print as PDF      │
 │   • Follow-up chat available on every report                 │
 │                                                              │
-│   LLM: Google Gemini 1.5 Flash (temperature: 0.7)           │
+│   LLM: Google Gemini (temperature: 0.7)                        │
 │   Execution: Direct REST API via urllib in asyncio.to_thread │
 │   Retry: Up to 4 attempts with exponential backoff on 429   │
 │                                                              │
@@ -628,6 +628,7 @@ Frontend runs at **http://localhost:5173**
 | `JWT_ALGORITHM` | ❌ | `HS256` | JWT signing algorithm |
 | `JWT_EXPIRATION_MINUTES` | ❌ | `60` | Token expiry in minutes |
 | `GEMINI_API_KEY` | ✅ | — | Google Gemini API key |
+| `GEMINI_MODEL` | ❌ | `gemini-3.6-flash` | Gemini model ID used by the research pipeline |
 | `CORS_ORIGINS` | ❌ | `["http://localhost:5173"]` | Allowed CORS origins |
 
 ### Frontend (`frontend/.env`)
