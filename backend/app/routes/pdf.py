@@ -21,6 +21,24 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     return text.strip()
 
 
+def _question_line_count(text: str) -> int:
+    """Count numbered lines that read like questions (start with a question verb)."""
+    lines = re.findall(r"(?:^|\n)\s*(?:Q\d+|Question\s*\d+|\d+[.)])\s+(.*)", text)
+    verb = re.compile(
+        r"^(?:\(?\s*[a-z]\s*\)\s*)?(?:the\s+|following\s+)?"
+        r"(?:define|explain|what|why|how|when|where|which|state|write|"
+        r"differentiate|describe|list|discuss|compare|calculate|solve|derive|"
+        r"prove|mention|give|distinguish|elaborate|answer|outline|sketch|"
+        r"justify|comment|note|name|find|evaluate|classify|convert|compute|show|draw)",
+        re.IGNORECASE,
+    )
+    count = 0
+    for line in lines:
+        if verb.match(line.strip()):
+            count += 1
+    return count
+
+
 def _looks_like_question_paper(text: str) -> bool:
     """Heuristically detect whether a PDF contains questions to be answered."""
     t = text.lower()
@@ -36,23 +54,38 @@ def _looks_like_question_paper(text: str) -> bool:
         "true or false",
         "section a",
         "section b",
+        "section c",
         "question no",
         "max. marks",
         "marks:",
         "write short notes",
+        "time allowed",
+        "total marks",
+        "maximum marks",
+        "attempt all",
+        "attempt any",
+        "all questions carry",
+        "each question carries",
+        "choose any",
+        "part a",
+        "part b",
+        "part c",
+        "instruction",
     ]
-    score = 0
-    if t.count("?") >= 3:
-        score += 2
-    for m in markers:
-        if m in t:
-            score += 1
-    numbered = len(
-        re.findall(r"(?:^|\n)\s*(?:Q\d+|Question\s*\d+|\d+[.)])\s+\S", text, re.IGNORECASE)
-    )
-    if numbered >= 3:
-        score += 2
-    return score >= 3
+    qmarks = t.count("?")
+    qlines = _question_line_count(text)
+    subq = len(re.findall(r"(?:^|\n)\s*\(\s*[a-z]\s*\)\s+\S", t))
+    marker_hits = sum(1 for m in markers if m in t)
+
+    if qmarks >= 3:
+        return True
+    if qlines >= 2:
+        return True
+    if qlines >= 1 and (qmarks >= 1 or subq >= 2 or marker_hits >= 1):
+        return True
+    if marker_hits >= 2:
+        return True
+    return False
 
 
 @router.post("/analyze")
