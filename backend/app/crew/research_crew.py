@@ -220,27 +220,48 @@ def _split_document(text: str, max_chars: int = 4000) -> list[str]:
     return chunks
 
 
-def _split_questions(text: str, max_chars: int = 4500) -> list[str]:
-    """Split a document into question blocks so no question is split in half."""
-    pattern = re.compile(r"(?:^|\n)\s*(?:Q\d+|Question\s*\d+|\d+[.)])\s+", re.IGNORECASE)
+Q_VERBS = (
+    r"(?:w\.a\.p|wap|what|why|how|when|where|which|state|explain|define|list|"
+    r"mention|write|name|describe|differentiate|compare|create|give|enlist|"
+    r"comment|elaborate|build|show|find|prove|derive|solve|calculate|sketch|"
+    r"outline|fill|answer|note|evaluate|discuss|identify|justify|trace)"
+)
+
+
+def _split_questions(text: str, questions_per_batch: int = 5, max_chars: int = 8000) -> list[str]:
+    """Split a document into question batches so no question is split in half.
+
+    Handles many formats: '1. Question', '1 Question', 'Q1 Question', 'Q.1 Question'.
+    Each batch keeps the original question numbers so answers stay in order.
+    """
+    pattern = re.compile(
+        r"(?<!\d)(?:(?:Question\s+|Q\.?\s*)?\d+[.)]?\s+)(?=" + Q_VERBS + r"\b)",
+        re.IGNORECASE,
+    )
     matches = list(pattern.finditer(text))
     if len(matches) < 2:
         return _split_document(text, max_chars)
 
     blocks: list[str] = []
     for i, m in enumerate(matches):
-        leading = m.group(0)
-        nl_len = len(leading) - len(leading.lstrip("\n"))
-        start = m.start() + nl_len
         end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
-        block = text[start:end].strip()
-        if not block:
-            continue
-        if len(block) > max_chars:
-            blocks.extend(_split_document(block, max_chars))
-        else:
+        block = text[m.start():end].strip()
+        if block:
             blocks.append(block)
-    return blocks
+
+    batches: list[str] = []
+    current = ""
+    count = 0
+    for b in blocks:
+        if (count >= questions_per_batch) or (current and len(current) + len(b) > max_chars):
+            batches.append(current)
+            current = ""
+            count = 0
+        current += b + "\n"
+        count += 1
+    if current.strip():
+        batches.append(current)
+    return batches
 
 
 def _run_qa_sync(document: str) -> str:
