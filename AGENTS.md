@@ -18,15 +18,16 @@ The project uses a **custom 2-step Gemini pipeline** (not the formal CrewAI `Age
 |----------|-------|
 | **Role** | Research Assistant |
 | **Prompt** | `RESEARCH_PROMPT` in `backend/app/crew/research_crew.py:12` |
-| **Goal** | Gather short, plain-English notes about the topic |
-| **Output** | Short bullet-point notes (simple words, no jargon) |
+| **Goal** | Gather detailed, factual notes about the topic |
+| **Output** | Structured notes covering definition, facts, advantages, disadvantages, real-life uses and examples |
 
 **Prompt includes:**
-- What it is (in simple words)
-- A few key facts and numbers
-- 2-3 real-world examples
-- Main pros and cons or challenges
-- What might happen next
+- Clear definition and background
+- Key facts, figures, and statistics
+- Advantages with explanations
+- Disadvantages with explanations
+- Real-life uses and 3-5 concrete examples
+- Current trends and what might happen next
 
 ---
 
@@ -34,22 +35,24 @@ The project uses a **custom 2-step Gemini pipeline** (not the formal CrewAI `Age
 
 | Property | Value |
 |----------|-------|
-| **Role** | Friendly Writer |
-| **Prompt** | `WRITER_PROMPT` in `backend/app/crew/research_crew.py:27` |
-| **Goal** | Turn notes into a short, easy-to-read report |
-| **Output** | Short Markdown report (~300 words, max 400) |
+| **Role** | Professional Technical Writer |
+| **Prompt** | `WRITER_PROMPT_PART1` / `WRITER_PROMPT_PART2` in `backend/app/crew/research_crew.py` |
+| **Goal** | Turn notes into a full, detailed report |
+| **Output** | Long Markdown report (2500+ words), written in two parts and merged |
 
 **Report structure:**
-1. **What's it about** — plain-language overview
-2. **Key points** — short bullet-point highlights
-3. **Bottom line** — main takeaway in one or two sentences
+1. **Introduction and Definition** (part 1)
+2. **Advantages** (part 1)
+3. **Disadvantages** (part 2)
+4. **Real-Life Uses and Examples** (part 2)
+5. **Conclusion** (part 2)
 
 **Writing rules:**
-- Plain, everyday words only — no jargon or fancy phrasing
-- ~300 words, maximum 400
-- Short sentences and short paragraphs (1-3 sentences)
-- Bullet points and bold text where useful
-- No extra sections, no repetition
+- 2500+ words total (part 1 ~1200, part 2 ~1300)
+- Full paragraphs with detailed explanations
+- Accurate, factual, and specific
+- Subheadings where useful
+- No "Key points" or "Summary" section
 
 ---
 
