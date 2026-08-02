@@ -167,3 +167,54 @@ def _run_crew_sync(topic: str) -> str:
 async def run_research_crew(topic: str) -> str:
     result = await asyncio.to_thread(_run_crew_sync, topic)
     return result
+
+
+ANSWER_PROMPT = """You are a helpful teacher and tutor. Below is a document containing questions.
+
+Answer EVERY question in the document, one by one. Do not skip any question.
+
+For each question:
+- Keep the same question number as in the document (or use "Q" + the number)
+- Write out the question
+- Give a clear, complete, and accurate answer underneath it
+- Add short explanations or examples where they help understanding
+
+Output format (numbered list):
+
+1. [question]
+   **Answer:** [complete answer]
+
+2. [question]
+   **Answer:** [complete answer]
+
+Answer every question fully. Do not add sections that are not answers to the questions.
+
+Document:
+{document}
+"""
+
+
+def _split_document(text: str, max_chars: int = 4000) -> list[str]:
+    """Split a document into chunks, trying to keep question blocks intact."""
+    lines = text.splitlines()
+    chunks: list[str] = []
+    current = ""
+    for line in lines:
+        if len(current) + len(line) + 1 > max_chars and current.strip():
+            chunks.append(current)
+            current = ""
+        current += line + "\n"
+    if current.strip():
+        chunks.append(current)
+    return chunks
+
+
+def _run_qa_sync(document: str) -> str:
+    parts = _split_document(document)
+    answers = [_call_gemini(ANSWER_PROMPT.format(document=part)) for part in parts]
+    return "\n\n".join(a.strip() for a in answers)
+
+
+async def run_qa_crew(document: str) -> str:
+    result = await asyncio.to_thread(_run_qa_sync, document)
+    return result

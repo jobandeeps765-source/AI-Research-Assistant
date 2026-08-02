@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
+import re
 from app.database import get_database
 from app.utils.dependencies import get_current_user
 from bson import ObjectId
@@ -20,12 +21,46 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     return text.strip()
 
 
+def _looks_like_question_paper(text: str) -> bool:
+    """Heuristically detect whether a PDF contains questions to be answered."""
+    t = text.lower()
+    markers = [
+        "answer the following",
+        "answer any",
+        "answer all",
+        "solve the following",
+        "short answer",
+        "long answer",
+        "multiple choice",
+        "fill in the blanks",
+        "true or false",
+        "section a",
+        "section b",
+        "question no",
+        "max. marks",
+        "marks:",
+        "write short notes",
+    ]
+    score = 0
+    if t.count("?") >= 3:
+        score += 2
+    for m in markers:
+        if m in t:
+            score += 1
+    numbered = len(
+        re.findall(r"(?:^|\n)\s*(?:Q\d+|Question\s*\d+|\d+[.)])\s+\S", text, re.IGNORECASE)
+    )
+    if numbered >= 3:
+        score += 2
+    return score >= 3
+
+
 @router.post("/analyze")
 async def analyze_pdf(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
 ):
-    """Upload a PDF and generate a research report from its content."""
+    """Upload a PDF and generate a research report (or answer its questions if it is a question paper)."""
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -46,7 +81,41 @@ async def analyze_pdf(
             detail="Could not extract enough text from the PDF. It may be image-based.",
         )
 
-    truncated_text = pdf_text[:15000]
+    truncated_text = pdf_text[:30000]
+
+    db = get_database()
+
+    if _looks_like_question_paper(truncated_text):
+        from app.crew.research_crew import run_qa_crew
+
+        try:
+            report = await run_qa_crew(truncated_text)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"PDF Q&A analysis failed: {str(e)}",
+            )
+
+        doc = {
+            "_id": str(ObjectId()),
+            "user_id": current_user["_id"],
+            "topic": f"PDF Q&A: {file.filename}",
+            "report": report,
+            "favorited": False,
+            "source_type": "pdf",
+            "original_filename": file.filename,
+            "created_at": datetime.utcnow(),
+        }
+
+        await db.research_history.insert_one(doc)
+
+        return {
+            "id": doc["_id"],
+            "user_id": doc["user_id"],
+            "topic": doc["topic"],
+            "report": doc["report"],
+            "created_at": str(doc["created_at"]),
+        }
 
     from app.crew.research_crew import run_research_crew
 
@@ -69,8 +138,6 @@ async def analyze_pdf(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"PDF analysis failed: {str(e)}",
         )
-
-    db = get_database()
 
     doc = {
         "_id": str(ObjectId()),
