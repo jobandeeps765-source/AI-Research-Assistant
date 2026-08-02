@@ -15,13 +15,16 @@ For the topic below, gather comprehensive notes:
 - Clear definition: what it is, its purpose, and how it works (explained properly, not vague)
 - Background and context: where it came from and why it matters
 - Key facts, figures, and statistics (with concrete numbers where possible)
-- Advantages: list each benefit with a short explanation of why it helps
-- Disadvantages: list each drawback or limitation with a short explanation
+- Advantages: list EACH benefit separately, with a short explanation of why it helps. Gather as many distinct benefits as you can.
+- Disadvantages: list EACH drawback or limitation separately, with a short explanation. Gather as many distinct drawbacks as you can, and make sure they are different points from the advantages.
 - Real-life uses: the actual industries, sectors, and situations where it is applied
 - 3-5 concrete real-world examples with enough detail to be useful
 - Current trends and what might happen next
 
-Be accurate and specific. Avoid vague filler. Use bullet points under each heading.
+CRITICAL RULES:
+- Every advantage must be a different point from every disadvantage. Never list the same point as both an advantage and a disadvantage.
+- Make sure the real-life uses and examples are different from the advantages/disadvantages — they show application, not pros/cons.
+- Be accurate and specific. Avoid vague filler. Use bullet points under each heading.
 
 Topic: {topic}
 """
@@ -42,10 +45,15 @@ RULES:
 - Professional but clear language.
 - Do NOT write the disadvantages, uses, or conclusion yet. Do NOT include a "Key points" or "Summary" section.
 
+ANTI-REPETITION RULES (most important):
+- Every sentence must introduce NEW information. Never restate an idea already mentioned in an earlier section.
+- Each point may appear only once in the entire report.
+- The Introduction gives background and definition. The Advantages section must only present positive benefits that were NOT mentioned in the Introduction.
+
 Notes:
 {findings}
 
-Write PART 1 now: title, Introduction and Definition, and Advantages. Write at least 1200 words."""
+Write PART 1 now: title, Introduction and Definition, and Advantages. Write at least 1200 words. Make every point unique — do not repeat anything."""
 
 
 WRITER_PROMPT_PART2 = """You are a professional technical writer producing an accurate, detailed research report.
@@ -64,10 +72,17 @@ RULES:
 - Professional but clear language.
 - Do NOT include a "Key points" or "Summary" section.
 
+ANTI-REPETITION RULES (most important):
+- Every sentence must introduce NEW information. Never restate an idea already covered in PART 1 (title, Introduction, Advantages).
+- Each point may appear only once in the entire report.
+- The Disadvantages section must present only negative aspects — never re-use a benefit from the Advantages section as a disadvantage, and never repeat a definition point from the Introduction.
+- The Real-Life Uses and Examples section must show real-world applications only — do not repeat pros or cons here.
+- The Conclusion summarizes, but must phrase it in fresh words, not copy sentences from earlier sections.
+
 Notes:
 {findings}
 
-Write PART 2 now: Disadvantages, Real-Life Uses and Examples, and Conclusion. Write at least 1300 words."""
+Write PART 2 now: Disadvantages, Real-Life Uses and Examples, and Conclusion. Write at least 1300 words. Make every point unique — do not repeat anything."""
 
 
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503}
@@ -111,7 +126,7 @@ def call_gemini(prompt: str) -> str:
     url = f"{API_BASE}/models/{GEMINI_MODEL}:generateContent?key={settings.GEMINI_API_KEY}"
     payload = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 8192},
+        "generationConfig": {"temperature": 0.85, "maxOutputTokens": 8192},
     }).encode()
 
     for attempt in range(MAX_ATTEMPTS):
