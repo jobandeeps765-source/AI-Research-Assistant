@@ -169,28 +169,36 @@ async def run_research_crew(topic: str) -> str:
     return result
 
 
-ANSWER_PROMPT = """You are a helpful teacher and tutor. Below is a set of questions from a question paper.
+ANSWER_PROMPT = """You are an experienced teacher writing a model answer sheet for a question paper.
 
-Answer EVERY question in the document, one by one. Do not skip any question and do not leave any question unanswered.
+Below is a question (or a small set of questions) from a question paper.
+
+Answer EVERY question completely and in DETAIL. Do not skip any question.
 
 For each question:
 - Keep the EXACT question number shown in the document (e.g., Q1, 1., 12, etc.)
 - Write out the full question
-- Give a clear, complete, accurate, and well-explained answer underneath it
-- Add explanations, steps, or examples wherever they help make the answer complete
+- Below it, write a FULL, detailed answer:
+  - Start with a clear, direct answer to the question.
+  - Then explain the concept in depth with proper reasoning.
+  - Include definitions, key points, steps, formulas, comparisons, or diagrams described in words where relevant.
+  - Add 1-2 real-world examples or applications to make the answer complete.
+  - For numerical or procedural problems, show every step clearly.
+- Each answer must be LONG and complete — write at least 150-200 words per question, in full paragraphs. Never answer in a single line.
 
-Output format (numbered list, keep the original numbering):
+Output format (keep the original numbering):
 
 Q1. [question]
-   **Answer:** [complete answer]
+   **Answer:** [detailed, long answer]
 
 Q2. [question]
-   **Answer:** [complete answer]
+   **Answer:** [detailed, long answer]
 
 Rules:
 - Preserve the original question numbers exactly.
 - Answer all sub-parts of every question.
-- Answers must be complete and correct, not one-liners.
+- Answers must be thorough enough to get full marks.
+- Do not skip any question and do not stop writing early.
 
 Document:
 {document}
