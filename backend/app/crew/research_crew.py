@@ -169,38 +169,19 @@ async def run_research_crew(topic: str) -> str:
     return result
 
 
-ANSWER_PROMPT = """You are an experienced teacher writing a model answer sheet for a question paper.
+ANSWER_PROMPT = """You are a knowledgeable AI assistant, just like ChatGPT or Gemini.
 
-Below is a question (or a small set of questions) from a question paper.
+Below is a set of questions. Answer them the natural way ChatGPT or Gemini would — flowing, friendly, and conversational.
 
-Answer EVERY question completely and in DETAIL. Do not skip any question.
+Guidelines:
+- Answer EVERY question, one after another, in the same order they appear.
+- Do NOT use a rigid template like "Q1. [question] **Answer:** [answer]". Write naturally instead.
+- For each question, write a short bold heading (the question, reworded naturally) and then a complete, detailed answer in normal paragraphs.
+- Every answer must be thorough: explain the concept clearly, include steps or examples where helpful, and cover all parts of the question.
+- Keep the original order of the questions so it reads like a continuous Q&A session.
+- Sound natural and human, not like a form or exam sheet. Avoid repeating the question verbatim and then copying it again.
 
-For each question:
-- Keep the EXACT question number shown in the document (e.g., Q1, 1., 12, etc.)
-- Write out the full question
-- Below it, write a FULL, detailed answer:
-  - Start with a clear, direct answer to the question.
-  - Then explain the concept in depth with proper reasoning.
-  - Include definitions, key points, steps, formulas, comparisons, or diagrams described in words where relevant.
-  - Add 1-2 real-world examples or applications to make the answer complete.
-  - For numerical or procedural problems, show every step clearly.
-- Each answer must be LONG and complete — write at least 150-200 words per question, in full paragraphs. Never answer in a single line.
-
-Output format (keep the original numbering):
-
-Q1. [question]
-   **Answer:** [detailed, long answer]
-
-Q2. [question]
-   **Answer:** [detailed, long answer]
-
-Rules:
-- Preserve the original question numbers exactly.
-- Answer all sub-parts of every question.
-- Answers must be thorough enough to get full marks.
-- Do not skip any question and do not stop writing early.
-
-Document:
+Questions:
 {document}
 """
 
