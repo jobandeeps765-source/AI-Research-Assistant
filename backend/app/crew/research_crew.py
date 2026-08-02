@@ -169,25 +169,28 @@ async def run_research_crew(topic: str) -> str:
     return result
 
 
-ANSWER_PROMPT = """You are a helpful teacher and tutor. Below is a document containing questions.
+ANSWER_PROMPT = """You are a helpful teacher and tutor. Below is a set of questions from a question paper.
 
-Answer EVERY question in the document, one by one. Do not skip any question.
+Answer EVERY question in the document, one by one. Do not skip any question and do not leave any question unanswered.
 
 For each question:
-- Keep the same question number as in the document (or use "Q" + the number)
-- Write out the question
-- Give a clear, complete, and accurate answer underneath it
-- Add short explanations or examples where they help understanding
+- Keep the EXACT question number shown in the document (e.g., Q1, 1., 12, etc.)
+- Write out the full question
+- Give a clear, complete, accurate, and well-explained answer underneath it
+- Add explanations, steps, or examples wherever they help make the answer complete
 
-Output format (numbered list):
+Output format (numbered list, keep the original numbering):
 
-1. [question]
+Q1. [question]
    **Answer:** [complete answer]
 
-2. [question]
+Q2. [question]
    **Answer:** [complete answer]
 
-Answer every question fully. Do not add sections that are not answers to the questions.
+Rules:
+- Preserve the original question numbers exactly.
+- Answer all sub-parts of every question.
+- Answers must be complete and correct, not one-liners.
 
 Document:
 {document}
@@ -209,8 +212,31 @@ def _split_document(text: str, max_chars: int = 4000) -> list[str]:
     return chunks
 
 
+def _split_questions(text: str, max_chars: int = 4500) -> list[str]:
+    """Split a document into question blocks so no question is split in half."""
+    pattern = re.compile(r"(?:^|\n)\s*(?:Q\d+|Question\s*\d+|\d+[.)])\s+", re.IGNORECASE)
+    matches = list(pattern.finditer(text))
+    if len(matches) < 2:
+        return _split_document(text, max_chars)
+
+    blocks: list[str] = []
+    for i, m in enumerate(matches):
+        leading = m.group(0)
+        nl_len = len(leading) - len(leading.lstrip("\n"))
+        start = m.start() + nl_len
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        block = text[start:end].strip()
+        if not block:
+            continue
+        if len(block) > max_chars:
+            blocks.extend(_split_document(block, max_chars))
+        else:
+            blocks.append(block)
+    return blocks
+
+
 def _run_qa_sync(document: str) -> str:
-    parts = _split_document(document)
+    parts = _split_questions(document)
     answers = [_call_gemini(ANSWER_PROMPT.format(document=part)) for part in parts]
     return "\n\n".join(a.strip() for a in answers)
 

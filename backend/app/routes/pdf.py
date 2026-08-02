@@ -114,7 +114,7 @@ async def analyze_pdf(
             detail="Could not extract enough text from the PDF. It may be image-based.",
         )
 
-    truncated_text = pdf_text[:30000]
+    truncated_text = pdf_text[:100000]
 
     db = get_database()
 
